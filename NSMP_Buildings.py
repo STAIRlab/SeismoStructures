@@ -39,6 +39,7 @@ for motion in event_processed.motions.values():
         if component.accel is not None: # change .accel to .veloc or .displ as needed
             plt.plot(component.accel.data, label=f"{location} - {direction}")
 plt.legend()
+plt.show()
 
 # Some stations of interest:
 # Berkeley; Great Western Savings -- NSMP Station 1103
