@@ -1,7 +1,6 @@
-import glob
 from pathlib import Path
 from zipfile import ZipFile
-import quakeio
+import evnt
 from matplotlib import pyplot as plt
 import json
 
@@ -17,29 +16,41 @@ station_codes = [station_dir.name for station_dir in station_dirs]
 print(station_codes)
 
 
-# 2) Read the data from the `i`th event of `my_station`
+# 2) Read the data from the `i`th event of each station
+#    and save a figure of the responses.
 
-my_station = "NP1103"  # set this as the station code of interest
-i = 0                  # set this as the event number of interest
+out_dir = Path("out/")
+if not out_dir.exists():
+    Path.mkdir(out_dir)
 
-events = in_dir.glob(f"{my_station}/*p.zip")
-event = list(events)[i]
-with ZipFile(event, "r") as readfile:
-    if any('.smc' in name for name in readfile.namelist()):
-        parser = 'smc.read_event'
-    else:
-        parser = None
-event_processed = quakeio.read(event, parser=parser, summarize=False)
-channel_locations = event_processed.motions
+for station in station_codes:
+    i = 0                  # set this as the event number of interest
+    print(f"Reading station {station}, event {i}")
 
-for motion in event_processed.motions.values():
-    for component in motion.components.values():
-        location = motion['location_name']
-        direction = component.get('component','?')
-        if component.accel is not None: # change .accel to .veloc or .displ as needed
-            plt.plot(component.accel.data, label=f"{location} - {direction}")
-plt.legend()
-plt.show()
+    events = in_dir.glob(f"{station}/*p.zip")
+    event = list(events)[i]
+    # with ZipFile(event, "r") as readfile:
+    #     if any('.smc' in name for name in readfile.namelist()):
+    #         parser = 'smc.read_event'
+    #     else:
+    #         parser = None
+
+    # event_processed = evnt.read(event)
+    # channel_locations = event_processed.motions
+
+    # for motion in event_processed.motions.values():
+
+    fig,ax = plt.subplots()
+    for record in evnt.try_zip(event):
+        # print(record)
+        # location = motion['location_name']
+        # direction = component.get('component','?')
+        if "type" in record and "accel" in record["type"].lower(): # change .accel to .veloc or .displ as needed
+            ax.plot(record.data) #, label=f"{location} - {direction}")
+
+    ax.legend()
+    fig.savefig(out_dir/f"{station}_{i}")
+
 
 # Some stations of interest:
 # Berkeley; Great Western Savings -- NSMP Station 1103
